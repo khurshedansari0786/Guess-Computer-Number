@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Guess The Number</title>
+
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: 'Poppins', sans-serif;
+    }
+
+    body {
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      background: radial-gradient(circle at top, #1a2a6c, #000428);
+      color: #fff;
+    }
+
+    .game-card {
+      width: 100%;
+      max-width: 420px;
+      padding: 30px 25px;
+      border-radius: 25px;
+      background: rgba(255, 255, 255, 0.12);
+      backdrop-filter: blur(18px);
+      box-shadow: 0 25px 60px rgba(0,0,0,0.6);
+      text-align: center;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .game-card::before {
+      content: "";
+      position: absolute;
+      inset: -2px;
+      border-radius: 25px;
+      background: linear-gradient(135deg, #00f260, #0575e6, #ff00cc);
+      z-index: -1;
+      filter: blur(15px);
+    }
+
+    h1 {
+      font-size: 26px;
+      margin-bottom: 8px;
+      letter-spacing: 1px;
+    }
+
+    .subtitle {
+      font-size: 14px;
+      opacity: 0.85;
+      margin-bottom: 20px;
+    }
+
+    .input-box {
+      position: relative;
+      margin-bottom: 15px;
+    }
+
+    .input-box input {
+      width: 100%;
+      padding: 14px;
+      border-radius: 14px;
+      border: none;
+      outline: none;
+      font-size: 18px;
+      text-align: center;
+      background: rgba(0,0,0,0.6);
+      color: #fff;
+      box-shadow: inset 0 0 10px rgba(0,255,255,0.4);
+    }
+
+    .btn {
+      width: 100%;
+      padding: 14px;
+      margin-top: 10px;
+      border-radius: 30px;
+      border: none;
+      font-size: 17px;
+      font-weight: bold;
+      cursor: pointer;
+      background: linear-gradient(135deg, #00f260, #0575e6);
+      color: #000;
+      transition: 0.3s ease;
+      box-shadow: 0 0 20px rgba(0,255,255,0.6);
+    }
+
+    .btn:hover {
+      transform: translateY(-2px) scale(1.05);
+      box-shadow: 0 0 35px rgba(0,255,255,0.9);
+    }
+
+    .btn:disabled {
+      opacity: 0.4;
+      cursor: not-allowed;
+    }
+
+    .status {
+      margin-top: 15px;
+      padding: 12px;
+      border-radius: 14px;
+      font-size: 16px;
+      font-weight: 600;
+      text-align: center;
+      animation: pop 0.3s ease;
+    }
+
+    @keyframes pop {
+      from { transform: scale(0.9); opacity: 0.6; }
+      to { transform: scale(1); opacity: 1; }
+    }
+
+    .info {
+      background: rgba(0,0,0,0.6);
+      border: 2px solid #00eaff;
+      box-shadow: 0 0 15px #00eaff;
+    }
+
+    .low {
+      background: linear-gradient(135deg, #f7971e, #ffd200);
+      color: #000;
+    }
+
+    .high {
+      background: linear-gradient(135deg, #ff512f, #dd2476);
+    }
+
+    .win {
+      background: linear-gradient(135deg, #00f260, #00ff88);
+      color: #000;
+      box-shadow: 0 0 25px #00ff88;
+    }
+
+    .over {
+      background: #000;
+      border: 2px solid gold;
+      box-shadow: 0 0 25px gold;
+      color: gold;
+    }
+
+    .attempts {
+      margin-top: 12px;
+      font-size: 15px;
+      color: #00eaff;
+    }
+
+    .guesses {
+      margin-top: 10px;
+      font-size: 14px;
+      color: #ffccff;
+      word-wrap: break-word;
+    }
+
+    .restart {
+      display: none;
+      margin-top: 18px;
+      background: linear-gradient(135deg, #ff00cc, #3333ff);
+      color: #fff;
+    }
+
+    @media (max-width: 480px) {
+      h1 { font-size: 22px; }
+    }
+  </style>
+</head>
+
+<body>
+
+  <div class="game-card">
+    <h1>Guess The Number</h1>
+    <p class="subtitle">Pick a number between 1 and 100</p>
+
+    <div class="input-box">
+      <input type="number" id="guessUser" placeholder="Enter your guess">
+    </div>
+
+    <button class="btn" id="checkBtn" onclick="checkNumber()">Check Guess</button>
+
+    <div id="result1" class="status info">Attempts Available: 10</div>
+    <div class="attempts" id="result">Make your first guess 🎯</div>
+
+    <div class="guesses" id="allGuesses">Previous Guesses: None</div>
+
+    <button class="btn restart" id="restartBtn" onclick="restartGame()">Start New Game</button>
+  </div>
+
+  <script>
+    let computerGuess = Math.floor(Math.random() * 100) + 1;
+    let attempts = 10;
+    const maxAttempts = 10;
+    let userGuesses = [];
+
+    const input = document.getElementById("guessUser");
+    const checkBtn = document.getElementById("checkBtn");
+    const result = document.getElementById("result");
+    const result1 = document.getElementById("result1");
+    const allGuesses = document.getElementById("allGuesses");
+    const restartBtn = document.getElementById("restartBtn");
+
+    function checkNumber() {
+      const user = Number(input.value);
+
+      if (user < 1 || user > 100 || isNaN(user)) {
+        result1.className = "status high";
+        result1.innerText = "⚠️ Enter a number between 1 and 100";
+        input.value = "";
+        return;
+      }
+
+      userGuesses.push(user);
+      attempts--;
+
+      result1.className = "status info";
+      result1.innerText = `Attempts Left: ${attempts}/${maxAttempts}`;
+
+      if (user < computerGuess) {
+        result.className = "status low";
+        result.innerText = "📉 Too Low!";
+      }
+      else if (user > computerGuess) {
+        result.className = "status high";
+        result.innerText = "📈 Too High!";
+      }
+      else {
+        result.className = "status win";
+        result.innerText = `🎉 Correct! You won in ${maxAttempts - attempts} attempts`;
+        endGame();
+      }
+
+      if (attempts === 0 && user !== computerGuess) {
+        result.className = "status over";
+        result.innerText = `💀 Game Over! Number was ${computerGuess}`;
+        endGame();
+      }
+
+      allGuesses.innerText = "Previous Guesses: " + userGuesses.join(", ");
+      input.value = "";
+    }
+
+    function endGame() {
+      input.disabled = true;
+      checkBtn.disabled = true;
+      restartBtn.style.display = "block";
+    }
+
+    function restartGame() {
+      computerGuess = Math.floor(Math.random() * 100) + 1;
+      attempts = 10;
+      userGuesses = [];
+
+      input.disabled = false;
+      checkBtn.disabled = false;
+      input.value = "";
+
+      result1.className = "status info";
+      result1.innerText = "Attempts Available: 10";
+
+      result.className = "attempts";
+      result.innerText = "New Game Started 🚀";
+
+      allGuesses.innerText = "Previous Guesses: None";
+      restartBtn.style.display = "none";
+    }
+  </script>
+
+</body>
+</html>
